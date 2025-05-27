@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android App
 
 on:
   push:
@@ -36,16 +36,32 @@ jobs:
         yes | sdkmanager --licenses
         sdkmanager "platforms;android-31" "build-tools;31.0.0"
 
-    - name: Build APK
+    - name: Build APK and AAB
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_NDK_HOME: $HOME/.buildozer/android/platform/android-ndk-r25b
         PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$PATH
       run: |
+        sudo apt install -y git
         buildozer android debug
+        buildozer android release
 
-    - name: Upload APK
+    - name: Upload APK and AAB
       uses: actions/upload-artifact@v4
       with:
-        name: eventplanner-apk
-        path: bin/*.apk
+        name: eventplanner-builds
+        path: |
+          bin/*.apk
+          bin/*.aab
+
+# Optional: Auto-create a GitHub release (Uncomment to enable)
+#    - name: Create GitHub Release
+#      uses: softprops/action-gh-release@v2
+#      with:
+#        tag_name: "v1.0.${{ github.run_number }}"
+#        name: "Event Planner App Build ${{ github.run_number }}"
+#        files: |
+#          bin/*.apk
+#          bin/*.aab
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

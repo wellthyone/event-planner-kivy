@@ -15,32 +15,35 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.10'
 
-    - name: Install dependencies and Android SDK
+    - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y python3-pip openjdk-17-jdk zip unzip git wget
+        sudo apt install -y git zip unzip openjdk-17-jdk wget python3-pip libffi-dev libssl-dev
+        pip install --upgrade pip setuptools
         pip install buildozer cython
 
-        # Install Android SDK command line tools
+    - name: Install Android SDK
+      run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O tools.zip
         unzip tools.zip
         mv cmdline-tools latest
 
-        # Accept licenses and install platform tools
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-        yes | sdkmanager --licenses
-        sdkmanager "platforms;android-31" "build-tools;31.0.0"
+        echo "export ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          "platforms;android-31" "build-tools;31.0.0" "platform-tools"
 
     - name: Build APK and AAB
       env:
-        ANDROIDSDK: $HOME/android-sdk
-        ANDROID_NDK_HOME: $HOME/.buildozer/android/platform/android-ndk-r25b
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$PATH:$PATH
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+        PATH: ${{ env.PATH }}
       run: |
         buildozer android debug
         buildozer android release

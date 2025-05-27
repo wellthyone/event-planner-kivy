@@ -1,8 +1,8 @@
-name: Build Android APK and AAB
+name: Build Android App
 
 on:
   push:
-    branches: [ master ]  # or [ main ] if your default branch is "main"
+    branches: [ master ]
 
 jobs:
   build:
@@ -19,32 +19,28 @@ jobs:
 
     - name: Install dependencies and Android SDK
       run: |
-        # Install required tools
         sudo apt update
         sudo apt install -y python3-pip openjdk-17-jdk zip unzip git wget
+        pip install buildozer cython
 
-        # Install Python dependencies
-        pip install --upgrade pip
-        pip install cython buildozer
-
-        # Set up Android SDK
+        # Install Android SDK command line tools
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O tools.zip
         unzip tools.zip
         mv cmdline-tools latest
 
-        # Add SDK tools to PATH and accept licenses
+        # Accept licenses and install platform tools
         export ANDROID_SDK_ROOT=$HOME/android-sdk
         export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
         yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+        sdkmanager "platforms;android-31" "build-tools;31.0.0"
 
     - name: Build APK and AAB
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_NDK_HOME: $HOME/.buildozer/android/platform/android-ndk-r25b
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$PATH:$PATH
       run: |
         buildozer android debug
         buildozer android release

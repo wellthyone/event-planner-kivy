@@ -17,10 +17,9 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Install dependencies and Android SDK
+    - name: Install dependencies and Android SDK (without sudo)
       run: |
-        sudo apt update
-        sudo apt install -y python3-pip openjdk-17-jdk zip unzip git wget
+        apt update && apt install -y python3-pip openjdk-17-jdk zip unzip git wget
         pip install buildozer cython
 
         # Install Android SDK command line tools
@@ -30,7 +29,7 @@ jobs:
         unzip tools.zip
         mv cmdline-tools latest
 
-        # Set environment and accept licenses
+        # Set env and accept licenses
         export ANDROID_SDK_ROOT=$HOME/android-sdk
         export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
         yes | sdkmanager --licenses
@@ -42,7 +41,6 @@ jobs:
         ANDROID_NDK_HOME: $HOME/.buildozer/android/platform/android-ndk-r25b
         PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$PATH
       run: |
-        sudo apt install -y git
         buildozer android debug
         buildozer android release
 
@@ -54,7 +52,7 @@ jobs:
           bin/*.apk
           bin/*.aab
 
-# Optional: Auto-create a GitHub release (Uncomment to enable)
+# Uncomment below to enable automatic GitHub releases
 #    - name: Create GitHub Release
 #      uses: softprops/action-gh-release@v2
 #      with:
